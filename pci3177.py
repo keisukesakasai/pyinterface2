@@ -174,7 +174,7 @@ class pci3177_driver(core.interface_driver):
 
     def _start_sampling(self, data)
         bar = 0
-        offset = 0x03
+        offset = 0x04
         size = 1
         
         num = len(data)
@@ -203,11 +203,17 @@ class pci3177_driver(core.interface_driver):
         return self.read(bar, offset, size).print()
 
 
-    def _ch2bit(self, ch=''):
-        if ch == '': return b''
-        else:
-            ch = int(ch.replace('ch', ''))
-            ch = bin(ch-1).replace('0b', '0'*(8-(len(bin(ch-1))-2)))
-            bit_list = [int(ch[i]) for i in range(len(ch))]
-            bit_list.reverse()
-            return bit_list
+    def input_ad(self, ch='', singlediff=''):
+        bar = 0
+        size = 2
+        offset = 0x00
+
+        self._verify_mode(mode=singlediff)
+        self._verify_ch(ch=ch, mode=singlediff)
+        self._set_sampling_config(mode=singlediff)
+        ch = self._ch2bit(ch)
+        self._start_sampling(ch)
+
+        ret = self.read(bar, offset, size)
+        ret = self._list2voltage(ret.list())
+        return ret
