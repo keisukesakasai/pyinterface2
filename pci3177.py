@@ -107,6 +107,7 @@ class pci3177_driver(core.interface_driver):
 
         ret = self.read(bar, offset, size)
         bid = ret.to_hex()[1]
+
         return bid
 
 
@@ -114,9 +115,9 @@ class pci3177_driver(core.interface_driver):
         mode_list = ['single', 'diff']
         if mode in mode_list: pass
         else:
-        msg = 'Mode must be single or diff mode.'
-        msg += ' while {0} mode is given.'.format(mode)
-
+            msg = 'Mode must be single or diff mode.'
+            msg += ' while {0} mode is given.'.format(mode)
+        return
 
     def _verify_ch(self, ch='', mode=''):
         ch_limit_single = 64
@@ -169,6 +170,7 @@ class pci3177_driver(core.interface_driver):
         
         bytes_v = int.form_bytes(core.list2bytes(vol_list), 'little')
         vol = -vol_range + (vol_range/(res_int/2))*bytes_v
+
         return vol
 
 
@@ -216,4 +218,5 @@ class pci3177_driver(core.interface_driver):
 
         ret = self.read(bar, offset, size)
         ret = self._list2voltage(ret.list())
+
         return ret
