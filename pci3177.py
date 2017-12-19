@@ -168,7 +168,7 @@ class pci3177_driver(core.interface_driver):
         res_int = 2**12
         
         bytes_v = int.form_bytes(core.list2bytes(vol_list), 'little')
-        vol = -vol_range + (vol_range/res_int)*bytes_v
+        vol = -vol_range + (vol_range/(res_int/2))*bytes_v
         return vol
 
 
