@@ -117,6 +117,7 @@ class pci3177_driver(core.interface_driver):
         else:
             msg = 'Mode must be single or diff mode.'
             msg += ' while {0} mode is given.'.format(mode)
+            raise InvalidModeError(msg)
         return
 
     def _verify_ch(self, ch='', mode=''):
@@ -168,7 +169,7 @@ class pci3177_driver(core.interface_driver):
         res = 12
         res_int = 2**12
         
-        bytes_v = int.form_bytes(core.list2bytes(vol_list), 'little')
+        bytes_v = int.from_bytes(core.list2bytes(vol_list), 'little')
         vol = -vol_range + (vol_range/(res_int/2))*bytes_v
 
         return vol
@@ -220,3 +221,12 @@ class pci3177_driver(core.interface_driver):
         ret = self._list2voltage(ret.list())
 
         return ret
+
+        
+    def input_ad_master(self, ch='CH1-CH20', singlediff='diff'): # for Mr.Inaba
+        mode = singlediff
+        ch_ = ch.split('-')
+        ch_initial, ch_final = int(ch_[0]), int(ch[1])
+        ch = [self.input_ad('ch{0}'.format(i), mode) for i in range(ch_initial, ch_final+1)]
+
+        return ch
