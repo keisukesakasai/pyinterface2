@@ -110,7 +110,7 @@ class pci340816_driver(core.interface_driver):
             msg += 'while {0}[V] is given.'.format(voltage)
             raise InvalidVoltageError(msg)
 
-        return int(voltage)
+        return voltage
 
 
     def _verify_ch(self, ch=''):
@@ -140,18 +140,16 @@ class pci340816_driver(core.interface_driver):
 
 
     def _voltage2list(self, voltage=0):
-        vol_range = 10
-        res = 16
-        res_int = 2**res
-        global bit_list
+        voltage = float(voltage)
+        vol_range = float(10)
+        res = float(16)
+        res_int = float(2**res)
         
-        if voltage == 10: bytes_v = res_int - 1
-        elif isinstance(voltage, list): return voltage
-        elif isinstance(voltage, int):
-            bytes_v = int((voltage + vol_range)/(vol_range/(res_int/2)))
-            bit_ = bin(bytes_v).replace('0b', '0'*(16-(len(bin(bytes_v))-2)))
-            bit_list = [int(bit_[i]) for i in range(len(bit_))]
-            bit_list.reverse()
+        if voltage == float(10): bytes_v = int(res_int - 1)
+        elif: bytes_v = int((voltage + vol_tange)/(vol_range/(res_int/2)))
+        bit_ = bin(bytes_v).replace('0b', '0'*(16-(len(bin(bytes_v))-2)))
+        bit_list = [int(bit_[i]) for i in range(len(bit_))]
+        bit_list.reverse()
 
         return bit_list
 
@@ -195,18 +193,18 @@ class pci340816_driver(core.interface_driver):
         return
 
 
-    def _da_output(self, ch='', voltage=0):
+    def _output_da(self, ch=[], voltage=[]):
         bar = 0
         size_ch = 1
         size_vol = 2
         offset_ch = 0x02
         offset_vol = 0x00
 
-        data_ch = self._ch2bit(ch=ch)
+        data_ch = self._ch2bit(ch)
         new_d_ch = core.list2bytes(data_ch)
         self.write(bar, offset_ch, new_d_ch)
 
-        data_vol = self._voltage2list(voltage=voltage)
+        data_vol = self._voltage2list(voltage)
         new_d_vol = core.list2bytes(data_vol)
         self.write(bar, offset_vol, new_d_vol)
         return
@@ -229,7 +227,7 @@ class pci340816_driver(core.interface_driver):
         time.sleep(0.01)
         
         for i in range(len(ch_)):
-            self._da_output('ch{0}'.format(i+1), voltage)
+            self._output_da('ch{0}'.format(i+1), voltage)
 
         self._start_sampling()
         # self._da_onoff(onoff=0)
