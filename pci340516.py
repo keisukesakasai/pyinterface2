@@ -1,6 +1,7 @@
 
+import time
 import struct
-form . import core
+from . import core
 
 
 class InvalidChTypeError(Exception):
@@ -15,7 +16,7 @@ class InvalidCurrentError(Exception):
     pass
 
 
-class pci340516_driver(core.inteface_driver):
+class pci340516_driver(core.interface_driver):
     bit_flags_in = (
         (
             ('B0', 'B1', 'B2', 'B3', 'B4', 'B5', 'B6', 'B7'),
@@ -108,7 +109,7 @@ class pci340516_driver(core.inteface_driver):
             msg = 'Current must be in 0[mA] - {0}[mA].'.format(cur_limit)
             msg += 'while {0}[mA] is given.'.format(current)
             raise InvalidCurrentError(msg)
-        return
+        return current
 
 
     def _verify_ch(self, ch=''):
@@ -116,18 +117,18 @@ class pci340516_driver(core.inteface_driver):
         ch_lim_final = 8
         
         if ch.find('-') == -1:
-            msg = 'Ch type must be 'chx-chy' absolutelly'
+            msg = 'Ch type must be chx-chy absolutelly'
             msg += 'while {0} is given.'.format(ch)
             raise InvalidChtypeError(msg)
         
         ch_ = ch.split('-')
         if len(ch_) == 2: pass
         else :
-            msg = 'Ch type must be 'chx-chy' absolutelly'
+            msg = 'Ch type must be chx-chy absolutelly'
             msg += 'while {0} is given.'.format(ch)
             raise InvalidChtypeError(msg)
             
-        ch_initial, ch_final = int(ch_[0]), int(ch_[1])
+        ch_initial, ch_final = int(ch_[0].replace('ch', '')), int(ch_[1].replace('ch', ''))
         if 1 <= ch_initial < ch_final <= 8: pass
         else:
             msg = 'Ch range is in ch{0} - ch{1}'.format(ch_lim_initial, ch_lim_final)
@@ -142,9 +143,10 @@ class pci340516_driver(core.inteface_driver):
         res = 16
         res_int = 2**res
 
-        if current == 100: bytes_v = res_int - 1
-        else: int((current + cur_range)/(cur_range/(res_int/2)))
-        bit_ = bin(bytes_v).replace('0b', '0'*(16-(len(bin(bytes_v))-2)))
+        if current == 100: bytes_c = res_int - 1
+        else:
+            bytes_c = int((current + cur_range)/(cur_range/(res_int/2)))
+        bit_ = bin(bytes_c).replace('0b', '0'*(16-(len(bin(bytes_c))-2)))
         bit_list = [int(bit_[i]) for i in range(len(bit_))]
         bit_list.reverse()
 
@@ -155,12 +157,12 @@ class pci340516_driver(core.inteface_driver):
         bar = 0
         offset = 0x05
 
-        if mode == 'all_cout_disable': mode_ = ''
+        if mode == 'all_cout_disable': mode = ''
         elif mode == 'all_cout': mode = 'MD0'
         elif mode == 'all_cclear': mode = 'MD1'
         elif mode == 'all_cout_enale': mode = 'MD0 MD1'
 
-        flags = mode_
+        flags = mode
 
         self.set_flag(bar, offset, flags)
         return
@@ -171,7 +173,7 @@ class pci340516_driver(core.inteface_driver):
         else:
             ch = int(ch.replace('ch', ''))
             ch = bin(ch-1).replace('0b', '0'*(8-(len(bin(ch-1))-2)))
-            bit_list = [int(ch[i]) for i in range(len(ch))]
+            bit_list = [ch[i] for i in range(len(ch))]
             bit_list.reverse()
 
             return bit_list
@@ -181,15 +183,32 @@ class pci340516_driver(core.inteface_driver):
         bar = 0
         offset = 0x1b
 
-        if onoff = 0: onoff_ = ''
-        if onoff = 1: onoff_ = 'AO'
+        if onoff == 0: onoff_ = ''
+        if onoff == 1: onoff_ = 'AO'
 
         flags = onoff_
 
         self.set_flag(bar, offset, flags)
         return
 
+    
+    def _da_output(self, ch='', current=0):
+        bar = 0
+        size_ch = 1
+        size_cur = 2
+        offset_ch = 0x02
+        offset_cur = 0x00
 
+        data_ch = self._ch2bit(ch=ch)
+        new_d_ch = core.list2bytes(data_ch)
+        self.write(bar_ch, offset_ch, new_d_ch)
+
+        data_cur = self._current2list(current=current)
+        new_d_cur = core.list2byte(data_cur)
+        self.write(bar_ch, offset_cur, new_d_cur)
+        return
+
+    
     def _start_sampling(self):
         self._set_sampling_config(mode='all_cout')
 
@@ -199,15 +218,15 @@ class pci340516_driver(core.inteface_driver):
         size = 2
         offset = 0x00
 
-        ch = _verify_ch(ch=ch)
-        current = _verify_current(current=current)
-        current = _current2list(current=current)
+        ch = self._verify_ch(ch=ch)
+        current_ = self._verify_current(current)
+        current = self._current2list(current_)
         self._set_sampling_config(mode='all_cout_enable')
         self._da_onoff(onoff=1)
         time.sleep(0.01)
-        
+
         for i in range(len(ch)):
-            _da_output(ch=ch[i], current)
+            self._da_output('ch{0}'.format(i), current)
 
         self._start_sampling()
         # self._da_onoff(onoff=0)

@@ -1,6 +1,6 @@
 
 import struct
-form . import core
+from . import core
 
 
 class InvalidChError(Exception):
@@ -57,47 +57,46 @@ class pci3177_driver(core.interface_driver):
     
     bit_flags_out = (
         (
-            (
-                ('', '', '', '', '', '', '', ''),
-                ('', '', '', '', '', '', '', ''),
-                ('', '', '', '', '', '', '', ''),
-                ('', '', '', '', '', '', '', ''),
-                ('CA0', 'CA1', 'CA2', 'CA3', 'CA4', 'CA5', 'MA', 'MB'),
-                ('SD0', 'SD1', 'SD2', '', '', '', '', ''),
-                ('', '', '', '', '', '', '', ''),
-                ('', '', '', '', '', '', '', ''),
-                ('', '', '', '', '', '', '', ''),
-                ('GATE', '', '', '', '', '', '', ''),
-                ('', '', '', '', '', '', '', ''),
-                ('', '', '', '', '', '', '', ''),
-                ('', '', '', '', '', '', '', ''),
-                ('', '', '', '', '', '', '', ''),
-                ('', '', '', '', '', '', '', ''),
-                ('DITG', 'TMR', 'BSY', 'TRG', '', '', '', ''),
-                ('', 'EXTG', 'EINT', '', '', '', '', ''),
-                ('', '', '', '', '', '', '', ''),
-                ('', '', '', '', '', '', '', ''),
-                ('', '', '', '', '', '', '', ''),
-                ('', '', '', '', '', '', '', ''),
-                ('', '', '', '', '', '', '', ''),
-                ('', '', '', '', '', '', '', ''),
-                ('SMD1', '', '', '', '', 'M/S', 'CLKOEN', 'TRGOEN'),
-                ('', '', '', '', '', '', '', 'SMD0'),
-                ('', '', '', '', '', '', '', ''),
-                ('', '', '', '', '', '', '', ''),
-                ('', '', '', '', '', '', '', ''),
-                ('', '', '', '', '', '', '', ''),
-                ('', '', '', '', '', '', '', ''),
-                ('', 'OUT1', 'OUT2', '', '', '', '', ''),
-                ('', '', '', '', '', '', '')
-            ),
-            (
-                ('', '', '', '', '', '', '', ''),
-                ('U/D', 'INC', 'CS', '', '', '', '', ''),
-                ('U/D', 'INC', 'CS', '', '', '', '', ''),
-                ('U/D', 'INC', 'CS', '', '', '', '', '')
-            )
+            ('', '', '', '', '', '', '', ''),
+            ('', '', '', '', '', '', '', ''),
+            ('', '', '', '', '', '', '', ''),
+            ('', '', '', '', '', '', '', ''),
+            ('CA0', 'CA1', 'CA2', 'CA3', 'CA4', 'CA5', 'MA', 'MB'),
+            ('SD0', 'SD1', 'SD2', '', '', '', '', ''),
+            ('', '', '', '', '', '', '', ''),
+            ('', '', '', '', '', '', '', ''),
+            ('', '', '', '', '', '', '', ''),
+            ('GATE', '', '', '', '', '', '', ''),
+            ('', '', '', '', '', '', '', ''),
+            ('', '', '', '', '', '', '', ''),
+            ('', '', '', '', '', '', '', ''),
+            ('', '', '', '', '', '', '', ''),
+            ('', '', '', '', '', '', '', ''),
+            ('DITG', 'TMR', 'BSY', 'TRG', '', '', '', ''),
+            ('', 'EXTG', 'EINT', '', '', '', '', ''),
+            ('', '', '', '', '', '', '', ''),
+            ('', '', '', '', '', '', '', ''),
+            ('', '', '', '', '', '', '', ''),
+            ('', '', '', '', '', '', '', ''),
+            ('', '', '', '', '', '', '', ''),
+            ('', '', '', '', '', '', '', ''),
+            ('SMD1', '', '', '', '', 'M/S', 'CLKOEN', 'TRGOEN'),
+            ('', '', '', '', '', '', '', 'SMD0'),
+            ('', '', '', '', '', '', '', ''),
+            ('', '', '', '', '', '', '', ''),
+            ('', '', '', '', '', '', '', ''),
+            ('', '', '', '', '', '', '', ''),
+            ('', '', '', '', '', '', '', ''),
+            ('', 'OUT1', 'OUT2', '', '', '', '', ''),
+            ('', '', '', '', '', '', '')
+        ),
+        (
+            ('', '', '', '', '', '', '', ''),
+            ('U/D', 'INC', 'CS', '', '', '', '', ''),
+            ('U/D', 'INC', 'CS', '', '', '', '', ''),
+            ('U/D', 'INC', 'CS', '', '', '', '', '')
         )
+    )
 
 
     def get_board_id(self):
@@ -130,7 +129,7 @@ class pci3177_driver(core.interface_driver):
                 msg = 'Ch must be in 1ch-{0}ch with {1} mode.'.format(ch_limit_single, mode)
                 msg += ' while {0}ch is given.'.format(ch)
                 raise InvalidChError(msg)
-        return
+            return
         
         if mode == 'diff':
             if ch in ['ch{0}'.format(i) for i in range(1,ch_limit_diff+1)]: pass
@@ -138,33 +137,35 @@ class pci3177_driver(core.interface_driver):
                 msg = 'Ch must be in 1ch-{0}ch with {1} mode.'.format(ch_limit_diff, mode)
                 msg += ' while {0}ch is given.'.format(ch)
                 raise InvalidChError(msg)
-        return
+            return
 
 
-    def _set_sampling_config(self, mode='single'):
+    def _set_sampling_config(self, mode='diff'):
         bar = 0
         offset = 0x05
 
-        if mode == 'single': mode_ = ''
-        elif mode == 'diff': mode_ = 'SD0'
+        if mode == 'single': mode = ''
+        elif mode == 'diff': mode = 'SD0'
         
-        flags = mode_
+        flags = mode
 
         self.set_flag(bar, offset, flags)
         return
 
 
     def _ch2bit(self, ch=''):
+        ch_num  = 8
+        
         if ch == '': return b''
         else:
             ch = int(ch.replace('ch', ''))
-            ch = bin(ch-1).replace('0b', '0'*(8-(len(bin(ch-1))-2)))
+            ch = bin(ch-1).replace('0b', '0'*(ch_num-(len(bin(ch-1))-2)))
             bit_list = [int(ch[i]) for i in range(len(ch))]
             bit_list.reverse()
             return bit_list
 
 
-    def _list2voltage(vol_list=[]):
+        def _list2voltage(self, vol_list=[]):
         vol_range = 10
         res = 12
         res_int = 2**12
@@ -175,7 +176,7 @@ class pci3177_driver(core.interface_driver):
         return vol
 
 
-    def _start_sampling(self, data)
+    def _start_sampling(self, data):
         bar = 0
         offset = 0x04
         size = 1
@@ -193,7 +194,7 @@ class pci3177_driver(core.interface_driver):
         offset = 0x03
 
         busy = self.read(bar, offset, size)
-        while busy.list[7]==0:
+        while busy.to_list()[7]==0:
             busy = self.read(bar, offset, size)
         return
 
@@ -218,15 +219,16 @@ class pci3177_driver(core.interface_driver):
         self._start_sampling(ch)
 
         ret = self.read(bar, offset, size)
-        ret = self._list2voltage(ret.list())
+        ret = self._list2voltage(ret.to_list())
 
         return ret
 
-        
     def input_ad_master(self, ch='CH1-CH20', singlediff='diff'): # for Mr.Inaba
         mode = singlediff
         ch_ = ch.split('-')
         ch_initial, ch_final = int(ch_[0]), int(ch[1])
         ch = [self.input_ad('ch{0}'.format(i), mode) for i in range(ch_initial, ch_final+1)]
-
+        
         return ch
+
+                                            

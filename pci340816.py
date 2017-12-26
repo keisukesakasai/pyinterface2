@@ -1,6 +1,7 @@
 
+import time
 import struct
-form . import core
+from . import core
 
 
 class InvalidChTypeError(Exception):
@@ -15,7 +16,7 @@ class InvalidVoltageError(Exception):
     pass
 
 
-class pci340816_driver(core.inteface_driver):
+class pci340816_driver(core.interface_driver):
     bit_flags_in = (
         (
             ('B0', 'B1', 'B2', 'B3', 'B4', 'B5', 'B6', 'B7'),
@@ -108,7 +109,8 @@ class pci340816_driver(core.inteface_driver):
             msg = 'Voltage must be in -{0}[V] - {1}[V].'.format(-vol_limit, vol_limit)
             msg += 'while {0}[V] is given.'.format(voltage)
             raise InvalidVoltageError(msg)
-        return
+
+        return int(voltage)
 
 
     def _verify_ch(self, ch=''):
@@ -116,18 +118,18 @@ class pci340816_driver(core.inteface_driver):
         ch_lim_final = 16
 
         if ch.find('-') == -1:
-            msg = 'Ch type must be 'chx-chy' absolutelly'
+            msg = 'Ch type must be chx-chy absolutelly'
             msg += 'while {0} is given.'.format(ch)
-            raise InvalidChtypeError(msg)
+            raise InvalidChTypeError(msg)
         
         ch_ = ch.split('-')
         if len(ch_) == 2: pass
         else :
-            msg = 'Ch type must be 'chx-chy' absolutelly'
+            msg = 'Ch type must be chx-chy absolutelly'
             msg += 'while {0} is given.'.format(ch)
             raise InvalidChtypeError(msg)
             
-        ch_initial, ch_final = int(ch_[0]), int(ch_[1])
+        ch_initial, ch_final = int(ch_[0].replace('ch', '')), int(ch_[1].replace('ch', ''))
         if 1 <= ch_initial < ch_final <= 16: pass
         else:
             msg = 'Ch range is in ch{0} - ch{1}'.format(ch_lim_initial, ch_lim_final)
@@ -141,12 +143,15 @@ class pci340816_driver(core.inteface_driver):
         vol_range = 10
         res = 16
         res_int = 2**res
-
+        global bit_list
+        
         if voltage == 10: bytes_v = res_int - 1
-        else: int((voltage + vol_range)/(vol_range/(res_int/2)))
-        bit_ = bin(bytes_v).replace('0b', '0'*(16-(len(bin(bytes_v))-2)))
-        bit_list = [int(bit_[i]) for i in range(len(bit_))]
-        bit_list.reverse()
+        elif isinstance(voltage, list): return voltage
+        elif isinstance(voltage, int):
+            bytes_v = int((voltage + vol_range)/(vol_range/(res_int/2)))
+            bit_ = bin(bytes_v).replace('0b', '0'*(16-(len(bin(bytes_v))-2)))
+            bit_list = [int(bit_[i]) for i in range(len(bit_))]
+            bit_list.reverse()
 
         return bit_list
 
@@ -155,12 +160,12 @@ class pci340816_driver(core.inteface_driver):
         bar = 0
         offset = 0x05
 
-        if mode == 'all_vout_disable': mode_ = ''
+        if mode == 'all_vout_disable': mode = ''
         elif mode == 'all_vout': mode = 'MD0'
-        elif mode == 'all_vclear': mode = 'MD1'
+        elif mode == 'all_vout_clear': mode = 'MD1'
         elif mode == 'all_vout_enale': mode = 'MD0 MD1'
 
-        flags = mode_
+        flags = mode
 
         self.set_flag(bar, offset, flags)
         return
@@ -181,8 +186,8 @@ class pci340816_driver(core.inteface_driver):
         bar = 0
         offset = 0x1b
 
-        if onoff = 0: onoff_ = ''
-        if onoff = 1: onoff_ = 'AO'
+        if onoff == 0: onoff_ = ''
+        if onoff == 1: onoff_ = 'AO'
 
         flags = onoff_
 
@@ -199,11 +204,11 @@ class pci340816_driver(core.inteface_driver):
 
         data_ch = self._ch2bit(ch=ch)
         new_d_ch = core.list2bytes(data_ch)
-        self.write(bar_ch, offset_ch, new_d_ch)
+        self.write(bar, offset_ch, new_d_ch)
 
-        data_vol = self.voltage2bit(voltage=voltage)
-        new_d_vol = core.list2byte(data_vol)
-        self.write(bar_ch, offset_vol, new_d_vol)
+        data_vol = self._voltage2list(voltage=voltage)
+        new_d_vol = core.list2bytes(data_vol)
+        self.write(bar, offset_vol, new_d_vol)
         return
 
 
@@ -211,20 +216,20 @@ class pci340816_driver(core.inteface_driver):
         self._set_sampling_config(mode='all_vout')
 
     
-    def da_output(self, ch='', voltage=0):
+    def output_da(self, ch='', voltage=0):
         bar = 0
         size = 2
         offset = 0x00
 
-        ch = _verify_ch(ch=ch)
-        voltage = _verify_voltage(voltage=voltage)
-        voltage = _voltage2list(voltage=voltage)
+        ch_ = self._verify_ch(ch=ch)
+        voltage = self._verify_voltage(voltage=voltage)
+        voltage = self._voltage2list(voltage=voltage)
         self._set_sampling_config(mode='all_vout_enable')
         self._da_onoff(onoff=1)
         time.sleep(0.01)
         
-        for i in range(len(ch)):
-            _da_output(ch=ch[i], voltage)
+        for i in range(len(ch_)):
+            self._da_output('ch{0}'.format(i+1), voltage)
 
         self._start_sampling()
         # self._da_onoff(onoff=0)
