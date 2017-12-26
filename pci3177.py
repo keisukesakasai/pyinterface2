@@ -223,6 +223,7 @@ class pci3177_driver(core.interface_driver):
 
         return ret
 
+    
     def input_ad_master(self, ch='CH1-CH20', singlediff='diff'): # for Mr.Inaba
         mode = singlediff
         ch_ = ch.split('-')
