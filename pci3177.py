@@ -165,14 +165,14 @@ class pci3177_driver(core.interface_driver):
             return bit_list
 
 
-        def _list2voltage(self, vol_list=[]):
+    def _list2voltage(self, vol_list=[]):
         vol_range = 10
         res = 12
         res_int = 2**12
         
         bytes_v = int.from_bytes(core.list2bytes(vol_list), 'little')
         vol = -vol_range + (vol_range/(res_int/2))*bytes_v
-
+        
         return vol
 
 
