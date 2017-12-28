@@ -116,7 +116,6 @@ class pci3177_driver(core.interface_driver):
         else:
             msg = 'Mode must be single or diff mode.'
             msg += ' while {0} mode is given.'.format(mode)
-            raise InvalidModeError(msg)
         return
 
     def _verify_ch(self, ch='', mode=''):
@@ -140,26 +139,24 @@ class pci3177_driver(core.interface_driver):
             return
 
 
-    def _set_sampling_config(self, mode='diff'):
+    def _set_sampling_config(self, mode='single'):
         bar = 0
         offset = 0x05
 
-        if mode == 'single': mode = ''
-        elif mode == 'diff': mode = 'SD0'
+        if mode == 'single': mode_ = ''
+        elif mode == 'diff': mode_ = 'SD0'
         
-        flags = mode
+        flags = mode_
 
         self.set_flag(bar, offset, flags)
         return
 
 
     def _ch2bit(self, ch=''):
-        ch_num  = 8
-        
         if ch == '': return b''
         else:
             ch = int(ch.replace('ch', ''))
-            ch = bin(ch-1).replace('0b', '0'*(ch_num-(len(bin(ch-1))-2)))
+            ch = bin(ch-1).replace('0b', '0'*(8-(len(bin(ch-1))-2)))
             bit_list = [int(ch[i]) for i in range(len(ch))]
             bit_list.reverse()
             return bit_list
@@ -172,7 +169,7 @@ class pci3177_driver(core.interface_driver):
         
         bytes_v = int.from_bytes(core.list2bytes(vol_list), 'little')
         vol = -vol_range + (vol_range/(res_int/2))*bytes_v
-        
+
         return vol
 
 
@@ -198,7 +195,13 @@ class pci3177_driver(core.interface_driver):
             busy = self.read(bar, offset, size)
         return
 
+    
+    def set_sampling_config(self, singlediff=''):
+        self._verify_mode(mode=singlediff)
+        self._set_sampling_config(mode=singlediff)
+        return
 
+    
     def get_sampling_config(self):
         bar = 0
         offset = 0x05
@@ -207,7 +210,7 @@ class pci3177_driver(core.interface_driver):
         return self.read(bar, offset, size).print()
 
 
-    def input_ad(self, ch='', singlediff=''):
+    def input_ad(self, ch='', singlediff='diff'):
         bar = 0
         size = 2
         offset = 0x00
@@ -224,11 +227,16 @@ class pci3177_driver(core.interface_driver):
         return ret
 
     
-    def input_ad_master(self, ch='CH1-CH20', singlediff='diff'): # for Mr.Inaba
+    def input_ad_master(self, singlediff='diff'): # for Mr.Inaba
+        self._verify_mode(singlediff)
         mode = singlediff
-        ch_ = ch.split('-')
-        ch_initial, ch_final = int(ch_[0]), int(ch[1])
-        ch = [self.input_ad('ch{0}'.format(i), mode) for i in range(ch_initial, ch_final+1)]
+
+        if mode == 'single': ch = 'ch1-ch64'
+        elif mode == 'diff': ch = 'ch1-ch32'
+        
+        ch_ = ch.replace('ch', '').split('-')
+        ch_initial, ch_final = int(ch_[0]), int(ch_[1])
+        ch = [self.input_ad('ch{0}'.format(i)) for i in range(ch_initial, ch_final+1)]
         
         return ch
 
