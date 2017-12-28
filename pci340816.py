@@ -102,7 +102,7 @@ class pci340816_driver(core.interface_driver):
         return bid
 
 
-    def _verify_voltage(self, voltage=0):
+    def _verify_voltage(self, voltage=0.0):
         vol_limit = 10
         if abs(voltage) <= vol_limit: pass
         else:
@@ -139,14 +139,15 @@ class pci340816_driver(core.interface_driver):
         return ch
 
 
-    def _voltage2list(self, voltage=0):
+    def _voltage2list(self, voltage=0.0):
         voltage = float(voltage)
-        vol_range = float(10)
-        res = float(16)
-        res_int = float(2**res)
+        vol_range = 10.0
+        res = 16.0
+        res_int = 2**res
         
-        if voltage == float(10): bytes_v = int(res_int - 1)
-        elif: bytes_v = int((voltage + vol_tange)/(vol_range/(res_int/2)))
+        if voltage == 10.0: bytes_v = int(res_int - 1)
+        else: bytes_v = int((voltage + vol_range)/(vol_range/(res_int/2)))
+        bytes_v = int((voltage + vol_range)/(vol_range/(res_int/2)))
         bit_ = bin(bytes_v).replace('0b', '0'*(16-(len(bin(bytes_v))-2)))
         bit_list = [int(bit_[i]) for i in range(len(bit_))]
         bit_list.reverse()
@@ -193,18 +194,18 @@ class pci340816_driver(core.interface_driver):
         return
 
 
-    def _output_da(self, ch=[], voltage=[]):
+    def _da_output(self, ch='', voltage=0.0):
         bar = 0
         size_ch = 1
         size_vol = 2
         offset_ch = 0x02
         offset_vol = 0x00
 
-        data_ch = self._ch2bit(ch)
+        data_ch = self._ch2bit(ch=ch)
         new_d_ch = core.list2bytes(data_ch)
         self.write(bar, offset_ch, new_d_ch)
 
-        data_vol = self._voltage2list(voltage)
+        data_vol = self._voltage2list(voltage=voltage)
         new_d_vol = core.list2bytes(data_vol)
         self.write(bar, offset_vol, new_d_vol)
         return
@@ -214,26 +215,62 @@ class pci340816_driver(core.interface_driver):
         self._set_sampling_config(mode='all_vout')
 
     
-    def output_da(self, ch='', voltage=0):
+    def output_da(self, ch='', voltage=0.0):
         bar = 0
         size = 2
         offset = 0x00
 
         ch_ = self._verify_ch(ch=ch)
         voltage = self._verify_voltage(voltage=voltage)
-        voltage = self._voltage2list(voltage=voltage)
         self._set_sampling_config(mode='all_vout_enable')
         self._da_onoff(onoff=1)
         time.sleep(0.01)
         
         for i in range(len(ch_)):
-            self._output_da('ch{0}'.format(i+1), voltage)
+            self._da_output('ch{0}'.format(i+1), voltage)
 
         self._start_sampling()
-        # self._da_onoff(onoff=0)
         time.sleep(0.01)
         return
 
+    
+    def _verify_ch_sim(self, ch=''):
+        ch_lim_initial = 1
+        ch_lim_final = 16
 
+        if ch in ['ch{}'.format(i) for i in range(ch_lim_initial,ch_lim_final+1)]:
+            pass
+        else:
+            msg = 'Ch range is in ch{0} - ch{1}'.format(ch_lim_initial, ch_lim_final)
+            msg = 'while {0} is given'.format(ch)
+            raise InvalidChRangeError(msg)
+            
+        return ch
+
+    
+    def output_da_sim(self, ch='', voltage=0.0):
+        bar = 0
+        size = 2
+        offset = 0x00
+
+        ch_ = self._verify_ch_sim(ch=ch)
+        voltage = self._verify_voltage(voltage=voltage)
+        self._set_sampling_config(mode='all_vout_enable')
+        self._da_onoff(onoff=1)
+        time.sleep(0.01)
+
+        self._da_output(ch_, voltage)
+
+        self._start_sampling()
+        time.sleep(0.01)
+        return
+
+    
     def initialize(self):
+        self._da_onoff(onoff=1)
         self._set_sampling_config('all_vout_clear')
+
+
+    def finalize(self):
+        self._set_sampling_config('all_vout_clear')
+        self._da_onoff(onoff=0)
