@@ -1,12 +1,11 @@
 
-import pci3177
 import pyinterface
 
 class InvalidModeError(Exception):
     pass
 
 
-class cpz340816(object):
+class cpz3177u(object):
 
     def __init__(self, dev=0):
         self.dev = dev
@@ -42,6 +41,7 @@ class cpz340816(object):
             raise InvalidModeError(msg)
 
         ret = self.driver.input_ad_master(singlediff=singlediff)
-
+        ret = [val/2. for val in ret]
+        
         return ret
         
