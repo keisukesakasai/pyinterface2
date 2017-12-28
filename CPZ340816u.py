@@ -1,5 +1,4 @@
 
-import pci340816
 import pyinterface
 
 class InvalidChRangeError(Exception):
@@ -10,7 +9,7 @@ class InvalidVoltageRange(Exception):
 
 
 
-class cpz340816(object):
+class cpz340816u(object):
 
     def __init__(self, dev=0):
         self.dev = dev
@@ -23,13 +22,26 @@ class cpz340816(object):
         self.driver.initialize()
         return
 
+
+    def set_output(self, onoff=0):
+        onoff_eff = [0, 1]
+
+        if onoff in onoff_eff: pass
+        else:
+            msg = 'Onoff must be 0 or 1 absolutelly'
+            msg += 'while {0} is given.'.format(onoff)
+            raise InvalidOnOffError(msg)
+        
+        self.driver._da_onoff(onoff=onoff)
+         
     
-    def set_voltage(self, ch='', voltage=0.0):
+    def set_voltage(self, voltage=0.0, ch=0):
+        ch = 'ch{}'.format(ch+1)
         ch_lim_initial = 1
         ch_lim_final = 16
         vol_lim = 10.0
-        ch_eff = ['ch{}'.format(i) for i in range(ch_initial, ch_final+1)]
-
+        ch_eff = ['ch{}'.format(i) for i in range(ch_lim_initial, ch_lim_final+1)]
+        
         if ch in ch_eff: pass
         else:
             msg = 'Ch range is in ch{0} - ch{1}'.format(ch_lim_initial, ch_lim_final)
