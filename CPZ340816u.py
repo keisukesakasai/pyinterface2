@@ -1,12 +1,13 @@
 
 import pyinterface
 
+
 class InvalidChRangeError(Exception):
     pass
 
+
 class InvalidVoltageRange(Exception):
     pass
-
 
 
 class cpz340816u(object):
@@ -28,7 +29,7 @@ class cpz340816u(object):
 
         if onoff in onoff_eff: pass
         else:
-            msg = 'Onoff must be 0 or 1 absolutelly'
+            msg = 'Onoff must be 0 or 1 absolutelly '
             msg += 'while {0} is given.'.format(onoff)
             raise InvalidOnOffError(msg)
         
@@ -53,10 +54,10 @@ class cpz340816u(object):
         else:
             msg = 'Voltage must be in {0}[V] - {1}[V].'.format(-vol_limit, vol_limit)
             msg += 'while {0}[V] is given.'.format(voltage)
-            raise InvalidVoltageError(msg)
+            raise InvalidVoltageRangeError(msg)
         return
 
     
-    def finalize(self):
+    def close_board(self):
         self.driver.finalize()
         return
