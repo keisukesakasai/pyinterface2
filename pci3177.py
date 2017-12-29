@@ -114,27 +114,28 @@ class pci3177_driver(core.interface_driver):
         mode_list = ['single', 'diff']
         if mode in mode_list: pass
         else:
-            msg = 'Mode must be single or diff mode.'
-            msg += ' while {0} mode is given.'.format(mode)
+            msg = 'Mode must be single or diff mode '
+            msg += 'while {0} mode is given.'.format(mode)
         return
 
+    
     def _verify_ch(self, ch='', mode=''):
         ch_limit_single = 64
         ch_limit_diff = 32
 
         if mode == 'single':
-            if ch in ['ch{0}'.format(i) for i in range(1,ch_limit_single+1)]: pass
+            if ch in ['ch{0}'.format(i) for i in range(1, ch_limit_single+1)]: pass
             else:
-                msg = 'Ch must be in 1ch-{0}ch with {1} mode.'.format(ch_limit_single, mode)
-                msg += ' while {0}ch is given.'.format(ch)
+                msg = 'Ch must be in 1ch-{0}ch with {1} mode '.format(ch_limit_single, mode)
+                msg += 'while {0}ch is given.'.format(ch)
                 raise InvalidChError(msg)
             return
         
         if mode == 'diff':
             if ch in ['ch{0}'.format(i) for i in range(1,ch_limit_diff+1)]: pass
             else:
-                msg = 'Ch must be in 1ch-{0}ch with {1} mode.'.format(ch_limit_diff, mode)
-                msg += ' while {0}ch is given.'.format(ch)
+                msg = 'Ch must be in 1ch-{0}ch with {1} mode'.format(ch_limit_diff, mode)
+                msg += 'while {0}ch is given.'.format(ch)
                 raise InvalidChError(msg)
             return
 
