@@ -106,7 +106,7 @@ class pci340816_driver(core.interface_driver):
         vol_limit = 10
         if abs(voltage) <= vol_limit: pass
         else:
-            msg = 'Voltage must be in -{0}[V] - {1}[V].'.format(-vol_limit, vol_limit)
+            msg = 'Voltage must be in -{0}[V] - {1}[V] '.format(-vol_limit, vol_limit)
             msg += 'while {0}[V] is given.'.format(voltage)
             raise InvalidVoltageError(msg)
 
@@ -118,22 +118,24 @@ class pci340816_driver(core.interface_driver):
         ch_lim_final = 16
 
         if ch.find('-') == -1:
-            msg = 'Ch type must be chx-chy absolutelly'
+            msg = 'Ch type must be chx-chy absolutelly '
             msg += 'while {0} is given.'.format(ch)
             raise InvalidChTypeError(msg)
         
         ch_ = ch.split('-')
         if len(ch_) == 2: pass
         else :
-            msg = 'Ch type must be chx-chy absolutelly'
+            msg = 'Ch type must be chx-chy absolutelly '
             msg += 'while {0} is given.'.format(ch)
             raise InvalidChtypeError(msg)
             
         ch_initial, ch_final = int(ch_[0].replace('ch', '')), int(ch_[1].replace('ch', ''))
         if 1 <= ch_initial < ch_final <= 16: pass
         else:
-            msg = 'Ch range is in ch{0} - ch{1}'.format(ch_lim_initial, ch_lim_final)
-            msg = 'while ch{0} - ch{1} is given'.format(ch_initial, ch_final)
+            msg = 'Ch range is in ch{0} - ch{1} '.format(ch_lim_initial, ch_lim_final)
+            msg = 'while ch{0} - ch{1} is given.'.format(ch_initial, ch_final)
+            raise InvalidChRangeError(msg)
+            
         ch = [i for i in range(ch_initial, ch_final+1)]
 
         return ch
@@ -162,7 +164,7 @@ class pci340816_driver(core.interface_driver):
         if mode == 'all_vout_disable': mode = ''
         elif mode == 'all_vout': mode = 'MD0'
         elif mode == 'all_vout_clear': mode = 'MD1'
-        elif mode == 'all_vout_enale': mode = 'MD0 MD1'
+        elif mode == 'all_vout_enable': mode = 'MD0 MD1'
 
         flags = mode
 
@@ -241,8 +243,8 @@ class pci340816_driver(core.interface_driver):
         if ch in ['ch{}'.format(i) for i in range(ch_lim_initial,ch_lim_final+1)]:
             pass
         else:
-            msg = 'Ch range is in ch{0} - ch{1}'.format(ch_lim_initial, ch_lim_final)
-            msg = 'while {0} is given'.format(ch)
+            msg = 'Ch range is in ch{0} - ch{1} '.format(ch_lim_initial, ch_lim_final)
+            msg = 'while {0} is given.'.format(ch)
             raise InvalidChRangeError(msg)
             
         return ch
