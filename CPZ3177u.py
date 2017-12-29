@@ -1,6 +1,7 @@
 
 import pyinterface
 
+
 class InvalidModeError(Exception):
     pass
 
@@ -18,8 +19,8 @@ class cpz3177u(object):
         
         if mode in mode_eff: pass
         else:
-            msg = 'Mode must be single or diff mode.'
-            msg += ' while {0} mode is given.'.format(mode)
+            msg = 'Mode must be single or diff mode '
+            msg += 'while {0} mode is given.'.format(mode)
             raise InvalidModeError(msg)
 
         self.driver.set_sampling_config(singlediff=mode)
@@ -45,3 +46,6 @@ class cpz3177u(object):
         
         return ret
         
+
+    def close_board(self):
+        pass
